@@ -1,0 +1,23 @@
+[project]
+name = "fitvision"
+version = "0.1.0"
+description = "FitVision - AI Real-time Gym Coach"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "streamlit==1.54.0",
+    "streamlit-webrtc==0.64.5",
+    "mediapipe==0.10.14",
+    "opencv-python-headless==4.10.0.84",
+    "pandas==2.2.3",
+    "groq>=0.12.0",
+    "gtts==2.5.3",
+    "python-dotenv==1.2.2",
+    "protobuf<5",
+]
+
+[tool.uv]
+package = false
+exclude-dependencies = [
+    { package = { name = "mediapipe", version = "0.10.14" }, dependencies = ["opencv-contrib-python"] }
+]
