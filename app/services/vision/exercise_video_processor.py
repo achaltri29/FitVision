@@ -13,6 +13,9 @@ from detectors.pushup import PushUpDetector
 from detectors.biceps_curl import BicepsCurlDetector
 from detectors.shoulder_press import ShoulderPressDetector
 from detectors.lunges import LungesDetector
+from detectors.jumping_jacks import JumpingJackDetector
+from detectors.high_knees import HighKneesDetector
+from detectors.standing_oblique_crunches import StandingObliqueCrunchesDetector
 from services.config.workout_config import POSE_CONNECTIONS
 
 
@@ -42,6 +45,9 @@ class VideoProcessorClass(VideoProcessorBase):
             "Biceps Curls (Dumbbell)": BicepsCurlDetector(),
             "Shoulder Press": ShoulderPressDetector(),
             "Lunges": LungesDetector(),
+            "Jumping Jacks": JumpingJackDetector(),
+            "High Knees": HighKneesDetector(),
+            "Standing Oblique Crunches": StandingObliqueCrunchesDetector(),
         }
 
         self._frame_timestamps_ms = 0
@@ -122,6 +128,12 @@ class VideoProcessorClass(VideoProcessorBase):
             self._draw_press_overlays(img, metrics)
         elif ex_type == "Lunges":
             self._draw_lunge_overlays(img, metrics)
+        elif ex_type == "Jumping Jacks":
+            self._draw_jumping_jack_overlays(img, metrics)
+        elif ex_type == "High Knees":
+            self._draw_high_knees_overlays(img, metrics)
+        elif ex_type == "Standing Oblique Crunches":
+            self._draw_oblique_crunches_overlays(img, metrics)
 
 
     def _draw_squats_overlays(self, img, metrics):
@@ -185,6 +197,45 @@ class VideoProcessorClass(VideoProcessorBase):
             (20, h - 20),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
+            (0, 255, 0),
+            2,
+        )
+
+    def _draw_jumping_jack_overlays(self, img, metrics):
+        h, _ = img.shape[:2]
+
+        cv2.putText(
+            img,
+            f"ARMS: {metrics['arm_status']} | STANCE: {metrics['stance_status']}",
+            (20, h - 20),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 255, 0),
+            2,
+        )
+
+    def _draw_high_knees_overlays(self, img, metrics):
+        h, _ = img.shape[:2]
+
+        cv2.putText(
+            img,
+            f"KNEE: {metrics['knee_status']} | LEG: {metrics['active_leg']} | TORSO: {metrics['torso_status']}",
+            (20, h - 20),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            (0, 255, 0),
+            2,
+        )
+
+    def _draw_oblique_crunches_overlays(self, img, metrics):
+        h, _ = img.shape[:2]
+
+        cv2.putText(
+            img,
+            f"SIDE: {metrics['active_side']} | KNEE: {metrics['knee_status']} | TORSO: {metrics['torso_status']}",
+            (20, h - 20),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
             (0, 255, 0),
             2,
         )

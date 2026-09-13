@@ -3,7 +3,10 @@ EXERCISE_OPTIONS=[
     "Push-ups",
     "Biceps Curls (Dumbbell)",
     "Shoulder Press",
-    "Lunges"
+    "Lunges",
+    "Jumping Jacks",
+    "High Knees",
+    "Standing Oblique Crunches"
 ]
 
 
@@ -40,6 +43,28 @@ METRICS_FIELDS = {
         "torso_angle": 0,
         "balance_status": "N/A",
     },
+    "Jumping Jacks": {
+        "arm_angle": 0,
+        "stance_ratio": 0.0,
+        "arm_status": "N/A",
+        "stance_status": "N/A",
+        "sync_status": "N/A",
+    },
+    "High Knees": {
+        "knee_height": 0,
+        "torso_lean_angle": 0,
+        "knee_status": "N/A",
+        "active_leg": "N/A",
+        "torso_status": "N/A",
+    },
+    "Standing Oblique Crunches": {
+        "left_compression": 0.0,
+        "right_compression": 0.0,
+        "active_side": "NONE",
+        "knee_status": "N/A",
+        "torso_status": "N/A",
+        "lateral_flexion": 0,
+    },
 }
 
 
@@ -54,7 +79,10 @@ PROMPT = (
     "- For Biceps Curls (Dumbbell): focus only on elbow stability, torso stillness, curling control, and wrist alignment.\n"
     "- For Push-ups: focus only on straight plank line, chest to floor, elbow angles, and neutral hips.\n"
     "- For Squats: focus only on hip depth, knee tracking, chest up, and heel pressure.\n"
-    "- For Lunges: focus only on front knee tracking, upright torso, stride length, and balance.\n\n"
+    "- For Lunges: focus only on front knee tracking, upright torso, stride length, and balance.\n"
+    "- For Jumping Jacks: focus only on full overhead arm extension, wide feet jump, landing lightly on toes, and movement rhythm.\n"
+    "- For High Knees: focus only on driving knees to hip height, upright torso, running rhythm, and light foot landing.\n"
+    "- For Standing Oblique Crunches: focus only on driving the knee up laterally toward the elbow, squeezing the side obliques, controlled tempo, and returning fully to center between reps.\n\n"
     "### Your Role & Output Guidelines\n"
     "Provide around 10-15 words, high-energy coaching cues spoken aloud. Keep responses concise, direct, and natural.\n"
     "Use second person ('Keep your elbows pinned' not 'The user should...'). NO generic greetings.\n\n"

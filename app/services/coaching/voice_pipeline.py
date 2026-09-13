@@ -61,6 +61,46 @@ class VoicePipeline:
             if balance == "OFF BALANCE":
                 return "The user is losing balance during the lunge — feet should be hip-width apart."
 
+        elif exercise == "Jumping Jacks":
+            sync = metrics.get("sync_status", "")
+            arm_status = metrics.get("arm_status", "")
+            stance_status = metrics.get("stance_status", "")
+
+            if sync == "ARMS ASYMMETRIC":
+                return "The user's arms are moving asymmetrically — raise both arms evenly overhead."
+
+            if arm_status == "LOW" and stance_status == "WIDE":
+                return "The user's arms are not high enough — bring your hands fully overhead."
+
+            if stance_status == "NARROW" and arm_status == "OVERHEAD":
+                return "The user's stance is too narrow — jump your feet out wider."
+
+        elif exercise == "High Knees":
+            torso_status = metrics.get("torso_status", "")
+            knee_status = metrics.get("knee_status", "")
+            active_leg = metrics.get("active_leg", "")
+
+            if torso_status == "LEANING BACK":
+                return "The user is leaning back excessively — keep your chest tall and upright."
+
+            if knee_status == "LOW" and active_leg in ["LEFT", "RIGHT"]:
+                return "The user is not lifting their knees high enough — drive your knees up to hip level."
+
+        elif exercise == "Standing Oblique Crunches":
+            torso_status = metrics.get("torso_status", "")
+            knee_status = metrics.get("knee_status", "")
+            compression_status = metrics.get("compression_status", "")
+            active_side = metrics.get("active_side", "")
+
+            if torso_status == "EXCESSIVE LEAN":
+                return "The user is excessively leaning their torso — stay upright and actively drive the knee up."
+
+            if knee_status == "LOW" and active_side in ["LEFT", "RIGHT"]:
+                return "The user is not lifting their knee high enough — drive your knee up toward your elbow."
+
+            if compression_status == "INSUFFICIENT" and active_side in ["LEFT", "RIGHT"]:
+                return "The user is not compressing enough — squeeze your obliques and bring elbow and knee closer."
+
         return None
 
     def reset(self):

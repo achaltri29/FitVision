@@ -31,12 +31,19 @@ def initial_session_defaults():
         "plan_sets": 3,
         "plan_reps": 10,
 
-        # Common Angles
+        # Common Angles & Metrics
         "knee_angle": 0,
         "back_angle": 0,
         "elbow_angle": 0,
         "front_knee_angle": 0,
         "torso_angle": 0,
+        "arm_angle": 0,
+        "stance_ratio": 0.0,
+        "knee_height": 0,
+        "torso_lean_angle": 0,
+        "left_compression": 0.0,
+        "right_compression": 0.0,
+        "lateral_flexion": 0,
 
         # Status fields
         "depth_status": "N/A",
@@ -47,6 +54,13 @@ def initial_session_defaults():
         "extension_status": "N/A",
         "back_arch_status": "N/A",
         "balance_status": "N/A",
+        "arm_status": "N/A",
+        "stance_status": "N/A",
+        "sync_status": "N/A",
+        "knee_status": "N/A",
+        "active_leg": "N/A",
+        "torso_status": "N/A",
+        "active_side": "NONE",
     }
 
     for key, value in defaults.items():
