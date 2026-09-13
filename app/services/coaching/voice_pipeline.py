@@ -63,10 +63,44 @@ class VoicePipeline:
 
         return None
 
-    def process_event(self, event, exercise, metrics):
-        issue = self._find_form_issue(exercise, metrics)
+    def reset(self):
+        self.last_spoken_at = 0
+        if hasattr(self.llm, "reset_history"):
+            self.llm.reset_history()
 
+    def process_event(self, event, exercise, metrics):
         now = time.time()
+
+        if event == "workout_aborted":
+            reps = metrics.get("reps", 0) if metrics else 0
+            sets_completed = metrics.get("sets_completed", 0) if metrics else 0
+            partial_reps = metrics.get("partial_reps", 0) if metrics else 0
+            target_sets = metrics.get("target_sets", 0) if metrics else 0
+
+            if reps <= 0:
+                text = "Workout ended early. No reps were completed."
+            elif sets_completed == 0 and partial_reps > 0:
+                rep_word = "rep" if partial_reps == 1 else "reps"
+                text = f"Workout incomplete. You didn't complete a full set, but you got {partial_reps} {rep_word} in. Keep going next time!"
+            elif sets_completed > 0 and partial_reps > 0:
+                set_word = "set" if sets_completed == 1 else "sets"
+                rep_word = "rep" if partial_reps == 1 else "reps"
+                text = f"Workout incomplete. You completed {sets_completed} full {set_word} and {partial_reps} {rep_word} of the next set."
+            elif sets_completed > 0 and partial_reps == 0:
+                set_word = "set" if sets_completed == 1 else "sets"
+                text = f"Workout ended early. You completed {sets_completed} of {target_sets} full {set_word}."
+            else:
+                text = f"Workout ended early. You completed {reps} reps."
+
+            try:
+                voice = self.tts.speak(text)
+                self.last_spoken_at = now
+                return voice, text
+            except Exception as e:
+                print(f"[VoicePipeline Warning] Error generating voice feedback: {e}")
+                return None
+
+        issue = self._find_form_issue(exercise, metrics)
 
         is_major_issue = event in ["workout_started", "set_completed", "workout_completed"]
 
@@ -78,7 +112,7 @@ class VoicePipeline:
                 return None
             
         try:
-            text = self.llm.give_feedback(event, issue)
+            text = self.llm.give_feedback(event=event, exercise=exercise, issue=issue)
             voice = self.tts.speak(text)
             self.last_spoken_at = now
             return voice, text
@@ -87,10 +121,51 @@ class VoicePipeline:
             return None
     
 
-def autoplay_audio(audio_bytes):
+def get_audio_duration(audio_bytes):
+    if not audio_bytes:
+        return 0.0
+    try:
+        import av
+        import av.container
+        from io import BytesIO
+        container = av.open(BytesIO(audio_bytes))
+        if isinstance(container, av.container.InputContainer) and container.duration is not None:
+            return float(container.duration) / av.time_base
+    except Exception:
+        pass
+    return max(2.5, len(audio_bytes) / 4000.0)
+
+
+def autoplay_audio(audio_bytes, container=None):
     if not audio_bytes:
         return
     
-    st.markdown("<style>[data-testid='stAudio'] {display: none;}</style>", unsafe_allow_html=True)
-    
-    st.audio(audio_bytes, format="audio/mp3", autoplay=True)
+    import base64
+    import streamlit.components.v1 as components
+    b64 = base64.b64encode(audio_bytes).decode()
+    js_code = f"""
+    <script>
+    (function() {{
+        try {{
+            var p = window.parent;
+            var AudioCtx = (p && p.Audio) ? p.Audio : Audio;
+            var a = (p && p._fitvision_audio) ? p._fitvision_audio : new AudioCtx();
+            if (p) p._fitvision_audio = a;
+            a.pause();
+            a.src = "data:audio/mp3;base64,{b64}";
+            a.currentTime = 0;
+            a.play().catch(function(err) {{
+                console.warn("[FitVision Audio] Autoplay prevented:", err);
+            }});
+        }} catch(e) {{
+            console.error("[FitVision Audio] Playback error:", e);
+        }}
+    }})();
+    </script>
+    """
+    if container is not None:
+        with container:
+            components.html(js_code, height=0)
+    else:
+        components.html(js_code, height=0)
+

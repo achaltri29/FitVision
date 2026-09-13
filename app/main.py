@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 from groq import Groq
 from services.coaching.llm import LLMCoach
 from services.coaching.tts import TextToSpeech
-from services.coaching.voice_pipeline import VoicePipeline, autoplay_audio
+from services.coaching.voice_pipeline import VoicePipeline, autoplay_audio, get_audio_duration
 
 _APP_DIR = Path(__file__).resolve().parent
 load_dotenv(_APP_DIR / ".env")
@@ -73,6 +73,20 @@ def main():
         if not workout_started:
             plan_exercise = st.selectbox("Exercise", options=EXERCISE_OPTIONS, key="plan_exercise")
 
+            vp = st.session_state.get("voice_pipeline")
+            if plan_exercise != st.session_state.get("last_plan_exercise"):
+                st.session_state.last_plan_exercise = plan_exercise
+                st.session_state.coach_feedback = None
+                st.session_state.audio_to_play = None
+                st.session_state.audio_expires_at = 0.0
+                st.session_state.audio_event_id = 0
+                st.session_state.last_played_audio_id = 0
+                st.session_state.workout_completed = False
+                st.session_state.workout_incomplete = False
+                st.session_state.workout_ending = False
+                if vp is not None:
+                    vp.reset()
+
             plan_sets = st.number_input("Sets", min_value=0, max_value=50, key="plan_sets", step=1)
 
             plan_reps = st.number_input("Reps per Set", min_value=0, max_value=50, key="plan_reps", step=1)
@@ -82,27 +96,47 @@ def main():
             start_session_button = st.button("Start Workout", width="stretch", key="start_session_button")
 
             if start_session_button:
-                st.session_state.exercise_type = plan_exercise
-                st.session_state.target_sets = int(plan_sets)
-                st.session_state.reps_per_set = int(plan_reps)
-                st.session_state.reps = 0
-                st.session_state.workout_started = True
-                st.session_state.set_cycle_started_at = time.time()
-                st.session_state.last_saved_sets_completed = 0
+                target_sets_val = int(plan_sets)
+                reps_per_set_val = int(plan_reps)
 
-                if st.session_state.voice_pipeline:
-                    result = st.session_state.voice_pipeline.process_event(
-                        event="workout_started",
-                        exercise=plan_exercise,
-                        metrics={}
-                    )
-                    
-                    if result:
-                        st.session_state.audio_to_play, st.session_state.coach_feedback = result
+                if target_sets_val <= 0 or reps_per_set_val <= 0:
+                    st.error("Please configure Sets and Reps per Set greater than 0 before starting.")
+                else:
+                    st.session_state.exercise_type = plan_exercise
+                    st.session_state.target_sets = target_sets_val
+                    st.session_state.reps_per_set = reps_per_set_val
+                    st.session_state.reps = 0
+                    st.session_state.detector_last_raw_reps = 0
+                    st.session_state.sets_completed = 0
+                    st.session_state.current_set_reps = 0
+                    st.session_state.workout_completed = False
+                    st.session_state.workout_incomplete = False
+                    st.session_state.workout_ending = False
+                    st.session_state.coach_feedback = None
+                    st.session_state.audio_to_play = None
+                    st.session_state.audio_expires_at = 0.0
+                    st.session_state.audio_event_id = 0
+                    st.session_state.last_played_audio_id = 0
+                    st.session_state.workout_started = True
+                    st.session_state.set_cycle_started_at = time.time()
+                    st.session_state.last_saved_sets_completed = 0
+                    st.session_state.last_notified_sets_completed = 0
+                    st.session_state.last_notified_workout_complete = False
 
-                st.session_state.last_notified_sets_completed = 0
-                st.session_state.last_notified_workout_complete = False
-                st.rerun()
+                    if vp is not None:
+                        vp.reset()
+                        result = vp.process_event(
+                            event="workout_started",
+                            exercise=plan_exercise,
+                            metrics={}
+                        )
+                        
+                        if result:
+                            st.session_state.audio_to_play, st.session_state.coach_feedback = result
+                            st.session_state.audio_event_id = time.time()
+                            st.session_state.audio_expires_at = time.time() + get_audio_duration(result[0]) + 0.5
+
+                    st.rerun()
         else:
             exercise = st.session_state.get("exercise_type")
             sets = st.session_state.get("target_sets")
@@ -110,21 +144,72 @@ def main():
 
             st.info(f"**{exercise}** -- {sets} sets X {reps} reps")
 
-            end_session_button = st.button("End Workout", key="end_session_button", width="stretch")
+            workout_ending = st.session_state.get("workout_ending", False)
 
-            if end_session_button:
-                st.session_state.workout_started = False
-                
-                if st.session_state.voice_pipeline:
-                    result = st.session_state.voice_pipeline.process_event(
-                        event="workout_completed",
-                        exercise=exercise,
-                        metrics={}
+            if workout_ending:
+                st.button("Ending Workout...", disabled=True, width="stretch", key="ending_session_button")
+            else:
+                end_session_button = st.button("End Workout", key="end_session_button", width="stretch")
+
+                if end_session_button:
+                    target_sets_val = st.session_state.get("target_sets", 0)
+                    reps_per_set_val = st.session_state.get("reps_per_set", 0)
+                    total_reps = st.session_state.get("reps", 0)
+                    is_completed = st.session_state.get("workout_completed", False)
+                    already_notified = st.session_state.get("last_notified_workout_complete", False)
+
+                    completed_sets = (total_reps // reps_per_set_val) if reps_per_set_val > 0 else 0
+                    partial_reps = (total_reps % reps_per_set_val) if reps_per_set_val > 0 else 0
+
+                    genuinely_completed = bool(
+                        is_completed or (target_sets_val > 0 and completed_sets >= target_sets_val and total_reps > 0)
                     )
-                    if result:
-                        st.session_state.audio_to_play, st.session_state.coach_feedback = result
 
-                st.rerun()
+                    st.session_state.workout_ending = True
+
+                    vp = st.session_state.get("voice_pipeline")
+                    if vp is not None:
+                        if genuinely_completed:
+                            st.session_state.workout_completed = True
+                            st.session_state.workout_incomplete = False
+                            if not already_notified:
+                                st.session_state.last_notified_workout_complete = True
+                                result = vp.process_event(
+                                    event="workout_completed",
+                                    exercise=exercise,
+                                    metrics={"reps": total_reps, "sets_completed": completed_sets, "target_sets": target_sets_val}
+                                )
+                                if result:
+                                    st.session_state.audio_to_play, st.session_state.coach_feedback = result
+                                    st.session_state.audio_event_id = time.time()
+                                    st.session_state.audio_expires_at = time.time() + get_audio_duration(result[0]) + 0.5
+                        else:
+                            st.session_state.workout_completed = False
+                            st.session_state.workout_incomplete = True
+                            st.session_state.sets_completed = completed_sets
+                            st.session_state.current_set_reps = partial_reps
+                            if not already_notified:
+                                st.session_state.last_notified_workout_complete = True
+                                result = vp.process_event(
+                                    event="workout_aborted",
+                                    exercise=exercise,
+                                    metrics={
+                                        "reps": total_reps,
+                                        "sets_completed": completed_sets,
+                                        "partial_reps": partial_reps,
+                                        "target_sets": target_sets_val,
+                                    }
+                                )
+                                if result:
+                                    st.session_state.audio_to_play, st.session_state.coach_feedback = result
+                                    st.session_state.audio_event_id = time.time()
+                                    st.session_state.audio_expires_at = time.time() + get_audio_duration(result[0]) + 0.5
+
+                        vp.reset()
+                    else:
+                        st.session_state.last_notified_workout_complete = True
+
+                    st.rerun()
 
         if workout_started:
             st.divider()
@@ -177,13 +262,14 @@ def main():
     st.title("AI Real-time GYM Coach")
     st.markdown("#### Real-time pose detection with proactive AI voice coaching")
  
-    if st.session_state.get("audio_to_play"):
-        autoplay_audio(st.session_state.audio_to_play)
-
+    # Fixed, stable placeholder for Coach Feedback (never duplicates, never shifts camera)
+    coach_placeholder = st.empty()
     if st.session_state.get("coach_feedback"):
-        st.markdown("")
-        st.success(f"🤖 **Coach:** {st.session_state.coach_feedback}")
+        coach_placeholder.success(f"🤖 **Coach:** {st.session_state.coach_feedback}")
+    else:
+        coach_placeholder.empty()
 
+    context = None
     if not workout_started:
         st.markdown(
             """
@@ -219,12 +305,41 @@ def main():
         )
 
         sync_metrics_update(context)
-
-        if context.state.playing:
-            time.sleep(0.25)
-            st.rerun()
-
         inject_webrtc_styles()
+
+    # Fixed, stable placeholder for Audio Playback (placed AFTER camera so audio changes never shift camera position)
+    audio_placeholder = st.empty()
+    active_audio = st.session_state.get("audio_to_play")
+    audio_event_id = st.session_state.get("audio_event_id", 0)
+    last_played_id = st.session_state.get("last_played_audio_id", 0)
+
+    if active_audio:
+        if audio_event_id != last_played_id:
+            st.session_state.last_played_audio_id = audio_event_id
+            autoplay_audio(active_audio, container=audio_placeholder)
+        elif time.time() >= st.session_state.get("audio_expires_at", 0.0):
+            st.session_state.audio_to_play = None
+            st.session_state.audio_expires_at = 0.0
+            audio_placeholder.empty()
+    else:
+        audio_placeholder.empty()
+
+    # Final workout completion / early-end shutdown:
+    # Camera state and ending audio state are decoupled.
+    # Whether camera is streaming or already stopped, allow final coaching audio to play completely.
+    # Shut down workout state and return to home/setup ONLY after final audio lifecycle has finished.
+    is_ending = bool(st.session_state.get("workout_ending", False) or st.session_state.get("workout_completed", False))
+    final_notified = bool(st.session_state.get("last_notified_workout_complete", False))
+    audio_finished = bool(st.session_state.get("audio_to_play") is None or time.time() >= st.session_state.get("audio_expires_at", 0.0))
+
+    if workout_started and is_ending:
+        if final_notified and audio_finished:
+            st.session_state.workout_started = False
+            st.session_state.workout_ending = False
+            st.session_state.audio_to_play = None
+            st.session_state.audio_expires_at = 0.0
+            audio_placeholder.empty()
+            st.rerun()
 
     st.divider()
 
@@ -259,6 +374,18 @@ def main():
             st.table(agg_df, border="horizontal")
         else:
             st.info("No workout history found.")
+
+    # Periodic frame refresh when WebRTC streaming is active OR when ending flow is waiting for final audio
+    should_rerun = False
+    if workout_started:
+        if context is not None and hasattr(context, "state") and context.state.playing:
+            should_rerun = True
+        elif is_ending and not audio_finished:
+            should_rerun = True
+
+    if should_rerun:
+        time.sleep(0.25)
+        st.rerun()
 
 
 if __name__ == "__main__":

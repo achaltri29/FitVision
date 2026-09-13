@@ -7,11 +7,12 @@ class LLMCoach:
         self.history = []
         self.system_prompt = PROMPT
 
-    def give_feedback(self, event, issue):
-        prompt = f"Event: {event}"
+    def reset_history(self):
+        self.history = []
 
-        if issue:
-            prompt += f" Form Issue: {issue}"
+    def give_feedback(self, event, exercise="Exercise", issue=None):
+        exercise_str = exercise if exercise else "Exercise"
+        prompt = f"Exercise: {exercise_str} | Event: {event} | Form Issue: {issue if issue else 'None'}"
 
         messages = [
             {"role": "system", "content": self.system_prompt},
@@ -28,7 +29,16 @@ class LLMCoach:
         )
 
         text = response.choices[0].message.content.strip()
-        self.history.append({"role": "assistant", "content": text})
 
-        return text
+        lines = [l.strip() for l in text.splitlines() if l.strip()]
+        unique_lines = []
+        for l in lines:
+            if not unique_lines or l.lower() != unique_lines[-1].lower():
+                unique_lines.append(l)
+        cleaned_text = " ".join(unique_lines)
+
+        self.history.append({"role": "user", "content": prompt})
+        self.history.append({"role": "assistant", "content": cleaned_text})
+
+        return cleaned_text
     

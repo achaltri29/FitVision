@@ -179,3 +179,10 @@ div[role="menuitem"] {
   background-color: #181D2A !important;
   color: #fff;
 }
+
+/* =========================================================
+   AUDIO PLAYER HIDE
+========================================================= */
+[data-testid="stAudio"] {
+  display: none !important;
+}
