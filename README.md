@@ -221,9 +221,3 @@ FitVision is deployed across two independent services:
 - **Temporal Consistency Smoothing**: Implementing Savitzky-Golay filtering on raw landmark trajectories to smooth high-frequency tracking jitter.
 - **Cloud Database Synchronization**: Integrating managed PostgreSQL / Supabase for persistent cross-device workout tracking.
 - **Adaptive Velocity Tracking**: Estimating barbell/limb velocity to monitor power output, tempo, and rate of fatigue across sets.
-
----
-
-## Author
-
-- **Achal Tripathi** — [GitHub (@achaltri29)](https://github.com/achaltri29)
