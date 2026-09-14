@@ -1,74 +1,172 @@
 /* =========================================================
-   GLOBAL THEME
-========================================================= */
+   FITVISION — AI Workout Coach
+   Design System v2
+   ========================================================= */
 
-.stApp {
-  background-color: #0A0D14;
-  color: #fff;
-}
+/* ── GOOGLE FONTS ── */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-[data-testid="stSidebar"] {
-  background-color: #111520;
+/* ── DESIGN TOKENS ── */
+:root {
+  --fv-bg:            #0A0D14;
+  --fv-bg-alt:        #0B0E17;
+  --fv-sidebar:       #10141E;
+  --fv-surface:       #151A26;
+  --fv-surface-hover: #1C2232;
+  --fv-border:        rgba(255, 255, 255, 0.08);
+  --fv-border-subtle: rgba(255, 255, 255, 0.05);
+  --fv-amber:         #F5A623;
+  --fv-amber-dim:     rgba(245, 166, 35, 0.15);
+  --fv-cyan:          #00D4FF;
+  --fv-cyan-dim:      rgba(0, 212, 255, 0.12);
+  --fv-text:          #E8EAF0;
+  --fv-muted:         #6B7280;
+  --fv-success:       #10B981;
+  --fv-success-dim:   rgba(16, 185, 129, 0.12);
+  --fv-font:          'Outfit', 'Inter', system-ui, sans-serif;
+  --fv-mono:          'JetBrains Mono', 'Fira Code', monospace;
+  --radius-sm:        6px;
+  --radius-md:        10px;
+  --radius-lg:        12px;
+  --radius-pill:      9999px;
 }
 
 /* =========================================================
-   TYPOGRAPHY (SCOPED – safer)
-========================================================= */
+   GLOBAL THEME
+   ========================================================= */
 
+.stApp {
+  background-color: var(--fv-bg) !important;
+  color: var(--fv-text) !important;
+}
+
+[data-testid="stSidebar"] {
+  background-color: var(--fv-sidebar) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* =========================================================
+   TYPOGRAPHY
+   ========================================================= */
+
+html, body,
 .block-container,
-.block-container * {
-  font-family: 'AdobeClean', sans-serif !important;
+.block-container *:not([data-testid="stIconMaterial"]):not([data-testid="stIconMaterial"] *),
+[data-testid="stSidebar"],
+[data-testid="stSidebar"] *:not([data-testid="stIconMaterial"]):not([data-testid="stIconMaterial"] *) {
+  font-family: var(--fv-font) !important;
+}
+
+[data-testid="stIconMaterial"],
+[data-testid="stIconMaterial"] * {
+  font-family: "Material Symbols Rounded" !important;
 }
 
 /* =========================================================
    LAYOUT
-========================================================= */
+   ========================================================= */
 
 .block-container {
-  padding: 50px 3rem !important;
-  max-width: 750px !important;
+  padding: 48px 3rem !important;
+  max-width: 1040px !important;
 }
 
 /* =========================================================
    BUTTONS
-========================================================= */
+   ========================================================= */
 
-button,
+button:not([kind="header"]):not([kind="headerNoPadding"]),
 .stButton button,
-.stDownloadButton button,
-.MuiBox-root button {
-  background-color: #181D2A !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 0 !important;
-  font-family: 'AdobeClean', sans-serif !important;
+.stDownloadButton button {
+  background-color: var(--fv-surface) !important;
+  border: 1px solid var(--fv-border) !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--fv-font) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+  transition: background-color 0.18s, border-color 0.18s, box-shadow 0.18s !important;
+}
+
+button:not([kind="header"]):not([kind="headerNoPadding"]):hover:not(:disabled),
+.stButton button:hover:not(:disabled) {
+  background-color: var(--fv-surface-hover) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.08) !important;
+}
+
+[data-testid="stSidebarCollapseButton"] button {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* =========================================================
-   INPUTS & TEXT ELEMENTS
-========================================================= */
+   SIDEBAR SLIDE / HORIZONTAL SCROLLBAR HIDE
+   ========================================================= */
+
+[data-testid="stSidebarContent"],
+[data-testid="stSidebarUserContent"],
+[data-testid="stSidebar"] > div {
+  overflow-x: hidden !important;
+}
+
+[data-testid="stSidebar"]::-webkit-scrollbar:horizontal,
+[data-testid="stSidebarContent"]::-webkit-scrollbar:horizontal,
+[data-testid="stSidebarUserContent"]::-webkit-scrollbar:horizontal,
+[data-testid="stSidebar"] *::-webkit-scrollbar:horizontal {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+
+/* Primary CTA button — Start Workout */
+[data-testid="stBaseButton-secondary"][kind="secondary"]:not([disabled]),
+[data-testid="stButton"] button[aria-label="Start Workout"],
+.stButton:has(button[kind="secondary"]) button {
+  border-radius: var(--radius-sm) !important;
+}
+
+/* =========================================================
+   INPUTS & FORM ELEMENTS
+   ========================================================= */
 
 input,
 textarea,
-p,
-li,
-code,
 [data-testid="stSelectbox"] > div > div,
 [data-baseweb="select"] > div,
 [data-baseweb="popover"] ul,
-[data-baseweb="menu"] {
-  border-radius: 0 !important;
-  font-family: 'AdobeClean', sans-serif !important;
+[data-baseweb="menu"],
+[data-testid="stNumberInputContainer"] {
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--fv-font) !important;
+  background-color: var(--fv-surface) !important;
+  border-color: var(--fv-border) !important;
+}
+
+[data-baseweb="popover"],
+[data-baseweb="menu"],
+div[role="menu"],
+div[role="menuitem"] {
+  border-radius: var(--radius-md) !important;
+  font-family: var(--fv-font) !important;
 }
 
 /* =========================================================
    METRICS
-========================================================= */
+   ========================================================= */
 
 [data-testid="stMetric"] {
-  background-color: #181D2A;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 1rem 1.2rem;
-  border-radius: 0;
+  background-color: var(--fv-surface);
+  border: 1px solid var(--fv-border);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  transition: background-color 0.18s, border-color 0.18s;
+}
+
+[data-testid="stMetric"]:hover {
+  background-color: var(--fv-surface-hover);
+  border-color: rgba(255, 255, 255, 0.13);
 }
 
 [data-testid="stMetric"] div {
@@ -78,22 +176,30 @@ code,
 }
 
 [data-testid="stMetricValue"] {
-  font-size: 1.5rem !important;
-  font-weight: 400 !important;
+  font-size: 1.45rem !important;
+  font-weight: 600 !important;
+  font-family: var(--fv-mono) !important;
+  color: var(--fv-text) !important;
+  letter-spacing: -0.01em !important;
 }
 
 [data-testid="stMetricLabel"] {
-  font-size: 15px !important;
-  opacity: 0.6;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  opacity: 0.55 !important;
+  font-family: var(--fv-font) !important;
 }
 
 [data-testid="stMetric"] div label p {
-  font-size: 16px !important;
+  font-size: 11px !important;
+  font-family: var(--fv-font) !important;
 }
 
 /* =========================================================
    CONTAINERS / CARDS
-========================================================= */
+   ========================================================= */
 
 .stContainer,
 .stExpander,
@@ -109,36 +215,30 @@ code,
 .stSelectbox,
 [data-baseweb="select"] > div,
 [data-testid="stForm"],
-[data-testid="stMetric"],
-[data-testid="stNumberInputContainer"],
 [data-testid="stDataFrameColumnMenu"],
 [data-testid="stHeadingWithActionElements"],
 [data-testid="stCaptionContainer"] p,
 [data-testid="stAlertContentInfo"] p,
 [data-testid="stSidebarNavLink"],
-[data-testid="stMarkdownContainer"] h3,
-[data-baseweb="popover"],
-[data-baseweb="menu"],
-div[role="menu"],
-div[role="menuitem"] {
-  border-radius: 0 !important;
-  font-family: 'AdobeClean', sans-serif !important;
+[data-testid="stMarkdownContainer"] h3 {
+  border-radius: var(--radius-md) !important;
+  font-family: var(--fv-font) !important;
 }
 
 /* =========================================================
-   DATAFRAME FIX
-========================================================= */
+   DATAFRAME
+   ========================================================= */
 
 .stDataFrame,
 .stDataFrame div,
 .stDataFrameGlideDataEditor {
-  border-radius: 0 !important;
-  font-family: 'AdobeClean', sans-serif !important;
+  border-radius: var(--radius-md) !important;
+  font-family: var(--fv-font) !important;
 }
 
 /* =========================================================
    INTERACTIVE ELEMENTS
-========================================================= */
+   ========================================================= */
 
 .stTextInput,
 .stTextArea,
@@ -157,32 +257,226 @@ div[role="menuitem"] {
 [data-testid="stButton"] button,
 [data-testid="stBaseButton-secondaryFormSubmit"],
 [data-testid="stStatusWidget"] {
-  border-radius: 0 !important;
-  font-family: 'AdobeClean', sans-serif !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--fv-font) !important;
+}
+
+/* =========================================================
+   SUCCESS / INFO ALERTS (Coach Feedback)
+   ========================================================= */
+
+[data-testid="stAlertContentSuccess"],
+[data-testid="stAlert"][data-baseweb="notification"][kind="success"],
+div[data-testid="stAlert"] {
+  border-radius: var(--radius-md) !important;
+  border-left: 3px solid var(--fv-amber) !important;
+  background-color: rgba(245, 166, 35, 0.08) !important;
 }
 
 /* =========================================================
    MARKDOWN
-========================================================= */
+   ========================================================= */
 
 [data-testid="stMarkdownContainer"] strong {
-  font-family: 'AdobeClean', sans-serif !important;
+  font-family: var(--fv-font) !important;
 }
 
 /* =========================================================
    FORM
-========================================================= */
+   ========================================================= */
 
 .stForm {
-  margin-top: 2rem !important;
-  padding: 1.5rem 1rem !important;
-  background-color: #181D2A !important;
-  color: #fff;
+  margin-top: 1.5rem !important;
+  padding: 1.5rem 1.25rem !important;
+  background-color: var(--fv-surface) !important;
+  border: 1px solid var(--fv-border) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: var(--radius-lg) !important;
+  color: var(--fv-text) !important;
+}
+
+/* =========================================================
+   DIVIDER
+   ========================================================= */
+
+[data-testid="stDivider"] hr {
+  border-color: var(--fv-border-subtle) !important;
+  opacity: 1 !important;
+}
+
+/* =========================================================
+   INFO BLOCK (workout plan display)
+   ========================================================= */
+
+[data-testid="stAlertContentInfo"],
+.stAlert {
+  border-radius: var(--radius-md) !important;
+  border: 1px solid rgba(0, 212, 255, 0.2) !important;
+  background-color: rgba(0, 212, 255, 0.06) !important;
 }
 
 /* =========================================================
    AUDIO PLAYER HIDE
-========================================================= */
+   ========================================================= */
+
 [data-testid="stAudio"] {
   display: none !important;
+}
+
+/* =========================================================
+   WEBRTC CAMERA VIEWFINDER FRAME
+   ========================================================= */
+
+/* Wrap the WebRTC component in a viewfinder aesthetic */
+[data-testid="stCustomComponentV1"] {
+  border-radius: var(--radius-lg) !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(245, 166, 35, 0.2) !important;
+  box-shadow: 0 0 40px rgba(245, 166, 35, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* =========================================================
+   SIDEBAR USER CARD CUSTOM HTML
+   ========================================================= */
+
+.fv-user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--fv-surface);
+  border: 1px solid var(--fv-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 4px;
+}
+
+.fv-user-avatar {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.fv-user-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fv-text);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   AI COACH FEEDBACK CARD (custom HTML injected via st.markdown)
+   ========================================================= */
+
+.fv-coach-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(245, 166, 35, 0.07);
+  border: 1px solid rgba(245, 166, 35, 0.22);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+}
+
+.fv-coach-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--fv-amber);
+  flex-shrink: 0;
+  margin-top: 5px;
+  animation: fv-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes fv-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.5); }
+  50%       { opacity: 0.7; box-shadow: 0 0 0 6px rgba(245, 166, 35, 0); }
+}
+
+.fv-coach-text {
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--fv-text);
+}
+
+.fv-coach-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fv-amber);
+  margin-bottom: 3px;
+}
+
+/* =========================================================
+   IDLE PLACEHOLDER (no workout started)
+   ========================================================= */
+
+.fv-idle-placeholder {
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  padding: 56px 32px;
+  text-align: center;
+  color: var(--fv-muted);
+  margin-top: 24px;
+  margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.fv-idle-placeholder h2 {
+  color: #bcc3d0;
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.fv-idle-placeholder p {
+  font-size: 0.97rem;
+  line-height: 1.65;
+  color: var(--fv-muted);
+}
+
+/* =========================================================
+   HISTORY TABLE CONTAINER
+   ========================================================= */
+
+[data-testid="stTable"] {
+  border-radius: var(--radius-md) !important;
+  overflow: hidden !important;
+  border: 1px solid var(--fv-border) !important;
+}
+
+/* =========================================================
+   NUMBER INPUT
+   ========================================================= */
+
+[data-testid="stNumberInputContainer"] {
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid var(--fv-border) !important;
+  background: var(--fv-surface) !important;
+}
+
+/* =========================================================
+   SELECT / DROPDOWN
+   ========================================================= */
+
+[data-testid="stSelectbox"] [data-baseweb="select"] > div:first-child {
+  border-radius: var(--radius-sm) !important;
+  background-color: var(--fv-surface) !important;
+  border-color: var(--fv-border) !important;
+}
+
+/* =========================================================
+   WEBRTC MUI BUTTONS (inner iframe)
+   ========================================================= */
+
+.MuiButtonBase-root,
+.MuiButton-root,
+.MuiButton-contained,
+.MuiButton-text {
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--fv-font), sans-serif !important;
 }

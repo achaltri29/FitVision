@@ -25,7 +25,7 @@ load_dotenv(_APP_DIR / ".env")
 def main():
     st.set_page_config(
         page_icon="🏋️‍♀️",
-        page_title="AI Real-time GYM Coach",
+        page_title="FitVision — AI Gym Coach",
         initial_sidebar_state="expanded",
         layout="centered"
     )
@@ -61,10 +61,50 @@ def main():
     workout_started = st.session_state.get("workout_started", False)
     
     with st.sidebar:
-        st.title("🏋️‍♂️ Apna AI Coach")
+        # ── Branding Header ──────────────────────────────────────
+        st.markdown(
+            """
+            <div style="padding: 4px 0 16px 0;">
+                <div style="font-size:1.35rem; font-weight:700; letter-spacing:-0.01em; color:#E8EAF0;">
+                    🏋️‍♂️ FitVision
+                </div>
+                <div style="font-size:11px; color:#6B7280; letter-spacing:0.05em; margin-top:4px;">
+                    Real-time pose coaching
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        if st.session_state.username:
-            st.caption(f"👤 Login as {st.session_state.username}")
+        # ── User session card + Logout ────────────────────────────
+        if st.session_state.get("username"):
+            col_user, col_logout = st.columns([3, 1], gap="small")
+            with col_user:
+                st.markdown(
+                    f"""
+                    <div class="fv-user-card">
+                        <span class="fv-user-avatar">👤</span>
+                        <span class="fv-user-name">{st.session_state.username}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            with col_logout:
+                if st.button("↩", key="logout_button", help="Logout"):
+                    # Reset user session
+                    st.session_state["user_id"] = None
+                    st.session_state["username"] = None
+                    # Reset workout state
+                    st.session_state["workout_started"] = False
+                    st.session_state["reps"] = 0
+                    st.session_state["sets_completed"] = 0
+                    st.session_state["workout_completed"] = False
+                    st.session_state["workout_incomplete"] = False
+                    st.session_state["workout_ending"] = False
+                    st.session_state["coach_feedback"] = None
+                    st.session_state["audio_to_play"] = None
+                    st.session_state["voice_pipeline"] = None
+                    st.rerun()
 
         st.divider()
 
@@ -93,7 +133,7 @@ def main():
 
             st.markdown("")
 
-            start_session_button = st.button("Start Workout", width="stretch", key="start_session_button")
+            start_session_button = st.button("▶ Start Workout", width="stretch", key="start_session_button")
 
             if start_session_button:
                 target_sets_val = int(plan_sets)
@@ -142,14 +182,14 @@ def main():
             sets = st.session_state.get("target_sets")
             reps = st.session_state.get("reps_per_set")
 
-            st.info(f"**{exercise}** -- {sets} sets X {reps} reps")
+            st.info(f"**{exercise}** — {sets} sets × {reps} reps")
 
             workout_ending = st.session_state.get("workout_ending", False)
 
             if workout_ending:
-                st.button("Ending Workout...", disabled=True, width="stretch", key="ending_session_button")
+                st.button("⏳ Ending Workout...", disabled=True, width="stretch", key="ending_session_button")
             else:
-                end_session_button = st.button("End Workout", key="end_session_button", width="stretch")
+                end_session_button = st.button("⏹ End Workout", key="end_session_button", width="stretch")
 
                 if end_session_button:
                     target_sets_val = st.session_state.get("target_sets", 0)
@@ -280,13 +320,41 @@ def main():
                 st.metric("Torso Posture", st.session_state.torso_status)
                 st.metric("Lateral Flexion", f"{st.session_state.lateral_flexion}°")
 
-    st.title("AI Real-time GYM Coach")
-    st.markdown("#### Real-time pose detection with proactive AI voice coaching")
+    # ── Main Stage Header ─────────────────────────────────────────
+    st.markdown(
+        """
+        <div style="margin-bottom: 4px;">
+            <h1 style="font-size: 1.9rem; font-weight: 700; letter-spacing: -0.02em;
+                       color: #E8EAF0; margin: 0; line-height: 1.2;">
+                FitVision
+                <span style="background: linear-gradient(135deg, #F5A623, #00D4FF);
+                             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                             background-clip: text;">Real-Time Gym Coach</span>
+            </h1>
+            <p style="font-size: 0.92rem; color: #6B7280; margin: 6px 0 0 0;
+                      letter-spacing: 0.01em;">
+                Live pose detection · AI voice coaching · Rep &amp; set tracking
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
  
-    # Fixed, stable placeholder for Coach Feedback (never duplicates, never shifts camera)
+    # ── AI Coach Feedback Card ────────────────────────────────────
     coach_placeholder = st.empty()
     if st.session_state.get("coach_feedback"):
-        coach_placeholder.success(f"🤖 **Coach:** {st.session_state.coach_feedback}")
+        coach_placeholder.markdown(
+            f"""
+            <div class="fv-coach-card">
+                <span class="fv-coach-pulse"></span>
+                <div>
+                    <div class="fv-coach-label">🤖 FitVision AI Coach</div>
+                    <div class="fv-coach-text">{st.session_state.coach_feedback}</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     else:
         coach_placeholder.empty()
 
@@ -294,19 +362,11 @@ def main():
     if not workout_started:
         st.markdown(
             """
-            <div style="
-                border: 10px dashed #444;
-                border-radius: 0px;
-                padding: 48px 32px;
-                text-align: center;
-                color: #888;
-                margin-top: 32px;
-                margin-bottom: 32px;
-            ">
-                <h2 style="color:#ccc; margin-bottom:8px;">👈 Set your workout plan</h2>
-                <p style="font-size:1.05rem;">
+            <div class="fv-idle-placeholder">
+                <h2>👈 Set your workout plan</h2>
+                <p>
                     Choose your exercise, sets and reps in the sidebar,<br>
-                    then click <strong>Start Workout</strong> to activate the camera and AI coach.
+                    then click <strong>▶ Start Workout</strong> to activate the camera and AI coach.
                 </p>
             </div>
             """,
@@ -328,7 +388,7 @@ def main():
         sync_metrics_update(context)
         inject_webrtc_styles()
 
-    # Fixed, stable placeholder for Audio Playback (placed AFTER camera so audio changes never shift camera position)
+    # ── Audio Playback ────────────────────────────────────────────
     audio_placeholder = st.empty()
     active_audio = st.session_state.get("audio_to_play")
     audio_event_id = st.session_state.get("audio_event_id", 0)
@@ -345,10 +405,7 @@ def main():
     else:
         audio_placeholder.empty()
 
-    # Final workout completion / early-end shutdown:
-    # Camera state and ending audio state are decoupled.
-    # Whether camera is streaming or already stopped, allow final coaching audio to play completely.
-    # Shut down workout state and return to home/setup ONLY after final audio lifecycle has finished.
+    # ── Workout Completion Shutdown ───────────────────────────────
     is_ending = bool(st.session_state.get("workout_ending", False) or st.session_state.get("workout_completed", False))
     final_notified = bool(st.session_state.get("last_notified_workout_complete", False))
     audio_finished = bool(st.session_state.get("audio_to_play") is None or time.time() >= st.session_state.get("audio_expires_at", 0.0))
@@ -364,7 +421,16 @@ def main():
 
     st.divider()
 
-    st.markdown("#### Workout History")
+    # ── Workout History ───────────────────────────────────────────
+    st.markdown(
+        """
+        <div style="font-size: 1.05rem; font-weight: 600; letter-spacing: 0.01em;
+                    color: #E8EAF0; margin-bottom: 12px;">
+            📊 Workout History
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     user_id = st.session_state.get("user_id", 0)
 
@@ -394,9 +460,9 @@ def main():
             agg_df.index += 1
             st.table(agg_df, border="horizontal")
         else:
-            st.info("No workout history found.")
+            st.info("No workout history yet. Complete your first session to see it here.")
 
-    # Periodic frame refresh when WebRTC streaming is active OR when ending flow is waiting for final audio
+    # ── Periodic Rerun ────────────────────────────────────────────
     should_rerun = False
     if workout_started:
         if context is not None and hasattr(context, "state") and context.state.playing:
@@ -411,4 +477,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
